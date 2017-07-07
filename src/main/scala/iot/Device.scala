@@ -11,6 +11,12 @@ class Device private (groupId: String, deviceId: String) extends Actor with Acto
   override def receive: Receive = {
     case ReadTemperature(requestId) =>
       sender() ! RespondTemperature(requestId, temperature)
+
+    case RecordTemperature(reqId, temp) => {
+      log.info("Recording temperature reading {} with {}", temp, reqId)
+      temperature = Some(temp)
+      sender() ! TemperatureRecorded(reqId)
+    }
   }
 
 }
@@ -18,7 +24,11 @@ class Device private (groupId: String, deviceId: String) extends Actor with Acto
 object Device {
   def props(groupId: String, deviceId: String): Props =  Props(new Device(groupId, deviceId) )
 
-  // Query protocol
+  //Query protocol
   final case class ReadTemperature(requestId: Long)
   final case class RespondTemperature(requestId: Long, temperature: Option[Double])
+
+  //Write protocol
+  final case class RecordTemperature(requestId: Long, temperature: Double)
+  final case class TemperatureRecorded(requestId: Long)
 }
