@@ -37,4 +37,27 @@ class DeviceActorSpec extends FlatSpec with BeforeAndAfterEach {
     assert(respondResponse.temperature === Some(25))
 
   }
+
+  it should "reply reply to registration request" in {
+    implicit val system = ActorSystem("Test")
+    val device = system.actorOf(Device.props("test", "test"))
+    val probe = TestProbe()
+
+    device.tell(DeviceManager.RequestTrackDevice("test", "test"), probe.ref)
+    probe.expectMsg(DeviceManager.DeviceRegistered)
+    assert(probe.lastSender === device)
+  }
+
+  it should "ignore wrong registration request" in {
+    implicit val system = ActorSystem("Test")
+    val device = system.actorOf(Device.props("test", "test"))
+    val probe = TestProbe()
+
+    device.tell(DeviceManager.RequestTrackDevice("test1", "test"), probe.ref)
+    probe.expectNoMsg()
+
+
+    device.tell(DeviceManager.RequestTrackDevice("test", "test1"), probe.ref)
+    probe.expectNoMsg()
+  }
 }

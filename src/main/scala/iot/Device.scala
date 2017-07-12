@@ -3,6 +3,7 @@ package iot
 import akka.actor.{Actor, ActorLogging, Props}
 
 class Device private (groupId: String, deviceId: String) extends Actor with ActorLogging {
+  import iot.DeviceManager._
   import iot.Device._
   private var temperature: Option[Double] = None
   override def preStart(): Unit = log.info("Device actor {}-{}", groupId, deviceId)
@@ -17,6 +18,11 @@ class Device private (groupId: String, deviceId: String) extends Actor with Acto
       temperature = Some(temp)
       sender() ! TemperatureRecorded(reqId)
     }
+
+    case RequestTrackDevice(grId, devId) if grId == groupId && devId == deviceId =>
+      sender() ! DeviceRegistered
+
+    case RequestTrackDevice(_, _) => log.warning(s"Ignoring $RequestTrackDevice")
   }
 
 }
